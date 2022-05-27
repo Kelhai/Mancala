@@ -1,10 +1,14 @@
-package com.example.mancala;
+package com.jonesclass.mancala;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Random;
@@ -12,6 +16,9 @@ import java.util.Random;
 public class Game extends AppCompatActivity {
 
     Button[][] buttons;
+    ImageView[][] imageViews;
+    ImageView topBowl;
+    ImageView bottomBowl;
 
     TextView otherTextView, playerTextView, turnTextView;
 
@@ -42,6 +49,8 @@ public class Game extends AppCompatActivity {
         otherTextView = findViewById(R.id.other_textView);
         playerTextView = findViewById(R.id.player_textView);
         turnTextView = findViewById(R.id.turn_textView);
+        topBowl = findViewById(R.id.imageView_topBowl);
+        bottomBowl = findViewById(R.id.imageView_bottomBowl);
 
         buttons = new Button[][]{
                 {
@@ -53,6 +62,22 @@ public class Game extends AppCompatActivity {
                         findViewById(R.id.button10), findViewById(R.id.button11),
                         findViewById(R.id.button12), findViewById(R.id.button13),
                         findViewById(R.id.button14), findViewById(R.id.button15)
+                }
+        };
+
+        imageViews = new ImageView[][]{
+                {
+                        findViewById(R.id.imageView_00), findViewById(R.id.imageView_01),
+                        findViewById(R.id.imageView_02), findViewById(R.id.imageView_03),
+                        findViewById(R.id.imageView_04), findViewById(R.id.imageView_05)
+                },
+                {
+                        findViewById(R.id.imageView_10), findViewById(R.id.imageView_11),
+                        findViewById(R.id.imageView_12), findViewById(R.id.imageView_13),
+                        findViewById(R.id.imageView_14), findViewById(R.id.imageView_15)
+                },
+                {
+                    findViewById(R.id.imageView_topBowl), findViewById(R.id.imageView_bottomBowl)
                 }
         };
 
@@ -76,6 +101,7 @@ public class Game extends AppCompatActivity {
                 });
             }
         }
+
     }
 
     protected void buttonClicked(int num) {
@@ -86,6 +112,7 @@ public class Game extends AppCompatActivity {
         if (value != 0) {
             values[num / 10][num % 10] = 0;
             move(num, value);
+            updateImages();
         }
         int win = checkWin();
         if (win != -1) {
@@ -99,6 +126,12 @@ public class Game extends AppCompatActivity {
         }
         // ai
         while (!playerTurn) {
+            for (Button[] buttonArr : buttons) {
+                for (Button button : buttonArr) {
+                    button.setEnabled(false);
+                }
+            }
+            turnTextView.setText("Opponent's Turn");
             int r, rVal;
             do {
                 r = randObj.nextInt(6);
@@ -106,7 +139,19 @@ public class Game extends AppCompatActivity {
             } while (rVal == 0);
             values[1][r] = 0;
             move(10 + r, rVal);
+            new CountDownTimer(1500, 1000) {
+                public void onFinish() {
+                    updateImages();
+                    for (Button[] buttonArr : buttons) {
+                        for (Button button : buttonArr) {
+                            button.setEnabled(true);
+                        }
+                    }
+                }
+                public void onTick(long millisUntilFinished) {
 
+                }
+            }.start();
             win = checkWin();
             if (win != -1) {
                 for (Button[] buttonArr : buttons) {
@@ -119,14 +164,23 @@ public class Game extends AppCompatActivity {
             }
         }
         //
-        for (int i = 0; i < buttons.length; i++) {
-            for (int j = 0; j < buttons[i].length; j++) {
-                buttons[i][j].setText(String.valueOf(values[i][j]));
-            }
-        }
         playerTextView.setText(String.valueOf(values[2][0]));
         otherTextView.setText(String.valueOf(values[2][1]));
-        turnTextView.setText(playerTurn ? "Your Turn" : "Opponent's Turn");
+        new CountDownTimer(1500, 1000) {
+            public void onFinish() {
+                int win = checkWin();
+                if(win == 1){
+                    turnTextView.setText("You Win!!");
+                }else if(win == 0){
+                    turnTextView.setText("You Lose:(");
+                }else{
+                    turnTextView.setText(playerTurn ? "Your Turn" : "Opponent's Turn");
+                }
+            }
+            public void onTick(long millisUntilFinished) {
+
+            }
+        }.start();
     }
 
     protected void move(int num, int value) { // animation goes somewhere in this function Andrew
@@ -177,5 +231,53 @@ public class Game extends AppCompatActivity {
             return (total1 + values[2][0] > total2 + values[2][1]) ? 0 : 1;
         }
         return -1;
+    }
+
+    public void updateImages(){
+        for (int i = 0; i < buttons.length; i++) {
+            for (int j = 0; j < buttons[i].length; j++) {
+                buttons[i][j].setText(String.valueOf(values[i][j]));
+                if(values[i][j] == 0){
+                    imageViews[i][j].setImageResource(R.drawable.ball);
+                }else if(values[i][j] == 1){
+                    imageViews[i][j].setImageResource(R.drawable.ball1);
+                }else if(values[i][j] == 2){
+                    imageViews[i][j].setImageResource(R.drawable.ball2);
+                }else if(values[i][j] == 3){
+                    imageViews[i][j].setImageResource(R.drawable.ball3);
+                }else if(values[i][j] == 4){
+                    imageViews[i][j].setImageResource(R.drawable.ball4);
+                }else{
+                    imageViews[i][j].setImageResource(R.drawable.ball5);
+                }
+            }
+        }
+        if(values[2][1] == 0){
+            topBowl.setImageResource(R.drawable.bowl);
+        }else if(values[2][1] == 1){
+            topBowl.setImageResource(R.drawable.bowl1);
+        }else if(values[2][1] == 2){
+            topBowl.setImageResource(R.drawable.bowl2);
+        }else if(values[2][1] == 3){
+            topBowl.setImageResource(R.drawable.bowl3);
+        }else if(values[2][1] == 4){
+            topBowl.setImageResource(R.drawable.bowl4);
+        }else{
+            topBowl.setImageResource(R.drawable.bowl5);
+        }
+
+        if(values[2][0] == 0){
+            bottomBowl.setImageResource(R.drawable.bowl);
+        }else if(values[2][0] == 1){
+            bottomBowl.setImageResource(R.drawable.bowl1);
+        }else if(values[2][0] == 2){
+            bottomBowl.setImageResource(R.drawable.bowl2);
+        }else if(values[2][0] == 3){
+            bottomBowl.setImageResource(R.drawable.bowl3);
+        }else if(values[2][0] == 4){
+            bottomBowl.setImageResource(R.drawable.bowl4);
+        }else{
+            bottomBowl.setImageResource(R.drawable.bowl5);
+        }
     }
 }
